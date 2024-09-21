@@ -1,0 +1,13 @@
+mkdir -p backend/{controllers,models,routes,middlewares,config}
+Aqui criamos a estrutura de pastas do projeto, onde backend é a pasta que contém o código do servidor e frontend é a pasta que contém o código do cliente.
+
+
+mkdir -p src/{components,pages,services,redux,reducers,styles}
+é mesmo que:
+mkdir components
+mkdir pages
+mkdir services
+mkdir redux
+mkdir reducers
+mkdir styles
+
