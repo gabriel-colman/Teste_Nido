@@ -1,110 +1,91 @@
-const axios = require('axios');
 const Word = require('../models/Word');
-const History = require('../models/History');
+const axios = require('axios');
 
+// Função para listar as palavras com paginação
 exports.getEntries = async (req, res) => {
-  // Implementação de busca de palavras com paginação
-  const { page = 1, limit = 10 } = req.query;
-  const options = {
-    page: parseInt(page, 10),
-    limit: parseInt(limit, 10),
-  };
-
   try {
-    const words = await Word.paginate({}, options);
-    res.status(200).json(words);
+    const { page = 1, limit = 10 } = req.query;
+    const words = await Word.find()
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const count = await Word.countDocuments();
+    res.json({
+      results: words,
+      totalDocs: count,
+      totalPages: Math.ceil(count / limit),
+      page: page,
+      hasNext: page * limit < count,
+      hasPrev: page > 1,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Erro ao obter palavras:', err.message);
+    res.status(500).json({ message: 'Erro ao obter palavras' });
   }
 };
 
+// Função para obter os detalhes de uma palavra
 exports.getEntryDetails = async (req, res) => {
-  // Implementação de detalhes da palavra e histórico
-  const { word } = req.params;
-
   try {
-    const wordDetails = await
-      Word.findOne({ word });
-    const history = await
-      History.find({ word }).sort({ createdAt: 'desc' });
+    const { word } = req.params;
+    let entry = await Word.findOne({ word });
 
-    if (!wordDetails) {
-      const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-      const data = response.data[0];
-      const { word, phonetics, meanings } = data;
-      const newWord = new Word({ word, phonetics, meanings });
-      await newWord.save();
-      res.status(200).json({ word: newWord, history });
+    if (!entry) {
+      console.log(`Buscando detalhes da palavra: ${word} na API externa.`);
+      const response = await axios.get(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
+      );
+
+      if (response.data && response.data.length > 0) {
+        entry = new Word({
+          word: response.data[0].word,
+          phonetics: response.data[0].phonetics,
+          meanings: response.data[0].meanings,
+          license: response.data[0].license,
+          sourceUrls: response.data[0].sourceUrls,
+        });
+        await entry.save();
+      } else {
+        return res.status(404).json({ message: 'Palavra não encontrada na API externa' });
+      }
     }
-    res.status(200).json({ word: wordDetails, history });
-  }
-  catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.json(entry);
+  } catch (err) {
+    console.error('Erro ao obter detalhes da palavra:', err.message);
+    res.status(500).json({ message: 'Erro ao obter detalhes da palavra' });
   }
 };
 
+// Função para adicionar aos favoritos
 exports.addFavorite = async (req, res) => {
-  // Implementação de adicionar aos favoritos
-
-  const { word } = req.params;
-  const { user } = req;
-
   try {
-    const wordDetails = await
-      Word
-        .findOne({ word })
-        .select('word phonetics meanings');
+    const { word } = req.params;
+    const user = req.user;
 
-    if (!wordDetails) {
-      return res.status(404).json({ message: 'Word not found' });
-    }
-
-    const history = new History({ word, user: user._id });
-    await history.save();
-
-    user.favorites.push(wordDetails);
+    user.favorites.push(word);
     await user.save();
 
-    res.status(200).json({ message: 'Word added to favorites' });
+    res.status(200).json({ message: 'Palavra adicionada aos favoritos' });
+  } catch (err) {
+    console.error('Erro ao adicionar palavra aos favoritos:', err.message);
+    res.status(500).json({ message: 'Erro ao adicionar palavra aos favoritos' });
   }
-  catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-
 };
 
+// Função para remover dos favoritos
 exports.removeFavorite = async (req, res) => {
-  // Implementação de remover dos favoritos
-
-  const { word } = req.params;
-  const { user } = req;
-
   try {
-    const wordDetails = await
-      Word
-        .findOne({ word })
-        .select('word phonetics meanings');
+    const { word } = req.params;
+    const user = req.user;
 
-    if (!wordDetails) {
-      return res.status(404).json({ message: 'Word not found' });
-    }
-
-    const history = await
-      History.findOne({ word, user: user._id });
-
-    if (!history) {
-      return res.status(404).json({ message: 'Word not found in favorites' });
-    }
-
-    await history.remove();
-
-    user.favorites = user.favorites.filter(favorite => favorite.word !== word);
+    user.favorites = user.favorites.filter((fav) => fav !== word);
     await user.save();
 
-    res.status(200).json({ message: 'Word removed from favorites' });
+    res.status(200).json({ message: 'Palavra removida dos favoritos' });
+  } catch (err) {
+    console.error('Erro ao remover palavra dos favoritos:', err.message);
+    res.status(500).json({ message: 'Erro ao remover palavra dos favoritos' });
   }
-  catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-
 };

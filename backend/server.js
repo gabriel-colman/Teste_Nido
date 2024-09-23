@@ -17,7 +17,10 @@ app.use('/user', require('./routes/user'));
 // Conexão com MongoDB e Inicialização do Servidor
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB conectado'))
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.error('Erro ao conectar ao MongoDB:', err.message);
+    process.exit(1);
+  });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

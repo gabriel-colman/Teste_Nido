@@ -1,22 +1,60 @@
 import axios from 'axios';
-const API_URL = `http://localhost:3000`;
 
-export const login = (email, password) => {
-    return axios.post(`${API_URL}/auth/signin`, { email, password });
+const api = axios.create({
+  baseURL: 'http://localhost:3000', // URL base da API backend
+});
+
+// Função para obter a lista de palavras com paginação
+export const getWords = async (page = 1, limit = 10) => {
+  try {
+    const response = await api.get(`/entries/en`, { params: { page, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao obter palavras:', error.message);
+    throw error;
+  }
 };
 
-export const getWords = (query = '') => { 
-    return axios.get(`${API_URL}/entries/en`); 
+// Função para obter detalhes de uma palavra específica
+export const getWordDetails = async (word) => {
+  try {
+    const response = await api.get(`/entries/en/${word}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao obter detalhes da palavra:', error.message);
+    throw error;
+  }
 };
 
-export const getWordDetails = (word) => { 
-    return axios.get(`${API_URL}/entries/en/${word}`); 
+// Função para adicionar uma palavra aos favoritos
+export const addFavorite = async (word) => {
+  try {
+    const response = await api.post(`/entries/en/${word}/favorite`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao adicionar palavra aos favoritos:', error.message);
+    throw error;
+  }
 };
 
-export const addFavorite = (word) => {
-    return axios.post(`${API_URL}/entries/en/${word}/favorite`); 
+// Função para remover uma palavra dos favoritos
+export const removeFavorite = async (word) => {
+  try {
+    const response = await api.delete(`/entries/en/${word}/unfavorite`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao remover palavra dos favoritos:', error.message);
+    throw error;
+  }
 };
 
-export const removeFavorite = (word) => { 
-    return axios.delete(`${API_URL}/entries/en/${word}/unfavorite`);
- };
+// Função para realizar login
+export const login = async (email, password) => {
+  try {
+    const response = await api.post(`/auth/signin`, { email, password });
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao realizar login:', error.message);
+    throw error;
+  }
+};
