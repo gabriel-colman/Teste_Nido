@@ -3,32 +3,27 @@ import { getWords } from '../services/api';
 import WordCard from '../components/WordCard';
 
 const Home = () => {
-  // Inicialize o estado com um valor padrão
-  const [words, setWords] = useState({ results: [] });
+  const [words, setWords] = useState([]);
 
   useEffect(() => {
     getWords().then(response => {
-      // Verifique se a resposta contém dados antes de definir o estado
-      if (response && response.results) {
-        setWords(response);
-      } else {
-        // Defina um estado padrão caso não haja dados
-        setWords({ results: [] });
-      }
+      setWords(response.results);
     }).catch(error => {
-      console.error("Erro ao buscar palavras:", error);
-      setWords({ results: [] });
+      console.error('Erro ao carregar palavras:', error);
     });
   }, []);
 
   return (
-    <div>
+    <div style={{ textAlign: 'center', padding: '20px' }}>
       <h1>Word List</h1>
-      <div>
-        {/* Verifique se words.results é um array antes de mapear */}
-        {Array.isArray(words.results) && words.results.map(word => (
-          <WordCard key={word} word={word} />
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {words.length > 0 ? (
+          words.map(word => (
+            <WordCard key={word._id} word={word} />
+          ))
+        ) : (
+          <p>Nenhuma palavra encontrada.</p>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { getEntries, getEntryDetails, addFavorite, removeFavorite } = require('../controllers/entryController');
+const { getEntries, getEntryDetails, addFavorite, removeFavorite, addWord } = require('../controllers/entryController');
 
 // Rota para obter as entradas com paginação
 router.get('/en', getEntries);
+
+// Rota para adicionar uma nova palavra
+router.post('/en', addWord);
 
 // Rota para obter detalhes de uma palavra específica
 router.get('/en/:word', getEntryDetails);

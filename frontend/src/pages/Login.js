@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux'; import { login } from '../services/api';
+import { login } from '../services/api';
 
-const Login = ({ history }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState(''); const dispatch = useDispatch();
+const Login = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        login(email, password).then(response => {
-            dispatch({ type: 'LOGIN_SUCCESS', payload: response.data }); 
-            history.push('/');
-        }).catch(err => { console.error(err); });
-    };
+  const handleLogin = async () => {
+    try {
+      const credentials = { username, password };
+      const response = await login(credentials);
+      console.log('Login bem-sucedido:', response);
+      // Faça algo com a resposta, como salvar o token ou redirecionar
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+    }
+  };
 
-    return (<div> <h1>Login</h1> <form onSubmit={handleSubmit}> <input type='email' value={email} onChange={e => setEmail(e.target.value)} placeholder='Email' required /> <input type='password' value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' required /> <button type='submit'>Login</button> </form> </div>);
+  return (
+    <div>
+      <h1>Login</h1>
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button onClick={handleLogin}>Login</button>
+    </div>
+  );
 };
 
 export default Login;

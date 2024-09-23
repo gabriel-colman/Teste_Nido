@@ -25,6 +25,18 @@ exports.getEntries = async (req, res) => {
   }
 };
 
+// Função para inserir uma nova palavra no banco de dados
+exports.addWord = async (req, res) => {
+  try {
+    const { word, meaning } = req.body;
+    const newWord = new Word({ word, meaning });
+    await newWord.save();
+    res.status(201).json({ message: 'Palavra adicionada com sucesso!', word: newWord });
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao adicionar a palavra.', error: err.message });
+  }
+};
+
 // Função para obter os detalhes de uma palavra
 exports.getEntryDetails = async (req, res) => {
   try {
